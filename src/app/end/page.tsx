@@ -9,12 +9,14 @@ function EndPageContent() {
   const [journal, setJournal] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const completed = searchParams.get("completed");
 
   const saveJournal = async () => {
     if (!journal.trim()) return;
     setSaving(true);
+    setError("");
     try {
       const res = await fetch("/api/journal", {
         method: "POST",
@@ -24,9 +26,16 @@ function EndPageContent() {
       if (res.ok) {
         setSaved(true);
         setJournal("");
+      } else {
+        const data = await res.json();
+        if (res.status === 401) {
+          setError("Sign in to save your whispers.");
+        } else {
+          setError(data.error || "Could not save. Try again.");
+        }
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setError("Connection lost. Try again.");
     } finally {
       setSaving(false);
     }
@@ -73,8 +82,16 @@ function EndPageContent() {
                   disabled={saving}
                   className="text-xs text-secondary hover:text-foreground tracking-widest uppercase transition-colors"
                 >
-                  {saving ? "Saving..." : "Save Journal"}
+                  {saving ? "Saving..." : "Save Whisper"}
                 </button>
+              )}
+              {error && (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-xs text-red-400">{error}</p>
+                  <Link href="/auth" className="text-xs text-accent hover:text-foreground tracking-widest uppercase transition-colors">
+                    Sign In
+                  </Link>
+                </div>
               )}
             </div>
           )}
