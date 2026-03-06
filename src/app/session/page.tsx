@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AmbientSound } from "@/components/ambient-sound";
+import { GratitudeDisplay } from "@/components/gratitude-display";
 
 function TimerParams() {
   const searchParams = useSearchParams();
@@ -11,12 +12,13 @@ function TimerParams() {
   const lengthInMinutes = lengthParam ? parseInt(lengthParam, 10) : 5;
   const totalSeconds = lengthInMinutes * 60;
 
+  const [sessionStarted, setSessionStarted] = useState(false);
   const [secondsPassed, setSecondsPassed] = useState(0);
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isActive && secondsPassed < totalSeconds) {
+    if (isActive && sessionStarted && secondsPassed < totalSeconds) {
       interval = setInterval(() => {
         setSecondsPassed((prev) => prev + 1);
       }, 1000);
@@ -39,8 +41,16 @@ function TimerParams() {
   const progress = (secondsPassed / totalSeconds) * 100;
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-foreground text-background transition-colors duration-[2000ms]">
-      <AmbientSound />
+    <main className="flex flex-col items-center justify-center min-h-screen bg-foreground text-background transition-colors duration-[2000ms] overflow-hidden">
+      {!sessionStarted && (
+        <GratitudeDisplay onFinish={() => {
+          setSessionStarted(true);
+          setIsActive(true);
+        }} />
+      )}
+      
+      {sessionStarted && <AmbientSound />}
+      
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
         <div className="w-64 h-64 rounded-full bg-background blur-3xl animate-breath"></div>
       </div>

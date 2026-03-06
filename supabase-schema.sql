@@ -47,11 +47,19 @@ create table if not exists donations (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- GRATITUDE DROPS TABLE
+create table if not exists gratitude_drops (
+  id uuid default uuid_generate_v4() primary key,
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- RLS POLICIES (Row Level Security)
 alter table users enable row level security;
 alter table sessions enable row level security;
 alter table journal_entries enable row level security;
 alter table donations enable row level security;
+alter table gratitude_drops enable row level security;
 
 -- Users can read and update their own profile
 create policy "Users can view own profile." on users for select using (auth.uid() = id);
@@ -67,6 +75,10 @@ create policy "Users can create own journal entries." on journal_entries for ins
 -- Donations: read only for the user, create only for the user
 create policy "Users can read own donations." on donations for select using (auth.uid() = user_id);
 create policy "Users can create own donations." on donations for insert with check (auth.uid() = user_id);
+
+-- Gratitude Drops: Anyone can read and insert
+create policy "Anyone can view gratitude drops" on gratitude_drops for select using (true);
+create policy "Anyone can insert gratitude drops" on gratitude_drops for insert with check (true);
 
 -- REALTIME
 -- For the sessions presence to show active users
