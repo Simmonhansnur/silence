@@ -44,7 +44,7 @@ export function GratitudeDisplay({ onFinish }: { onFinish: () => void }) {
     <div className={`absolute inset-0 flex flex-col items-center justify-center bg-foreground text-background z-50 transition-opacity duration-[2000ms] ${fadingOut ? 'opacity-0' : 'opacity-100'}`}>
       <div className="max-w-md text-center px-4 space-y-6">
         <p className="text-sm font-light tracking-widest uppercase opacity-50">Someone is grateful for:</p>
-        <h2 className="text-2xl md:text-3xl font-serif leading-relaxed px-4">"{content}"</h2>
+        <h2 className="text-2xl md:text-3xl font-serif leading-relaxed px-4">&quot;{content}&quot;</h2>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ function TimerParams() {
       });
     }
     return () => clearInterval(interval);
-  }, [isActive, secondsPassed, totalSeconds, router, lengthInMinutes]);
+  }, [isActive, secondsPassed, totalSeconds, router, lengthInMinutes, sessionStarted]);
 
   const progress = (secondsPassed / totalSeconds) * 100;
 

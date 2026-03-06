@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function GratitudeEntry() {
   const [content, setContent] = useState("");
