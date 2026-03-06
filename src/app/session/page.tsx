@@ -39,6 +39,9 @@ function TimerParams() {
   }, [isActive, secondsPassed, totalSeconds, router, lengthInMinutes, sessionStarted]);
 
   const progress = (secondsPassed / totalSeconds) * 100;
+  const remaining = totalSeconds - secondsPassed;
+  const displayMin = Math.floor(remaining / 60);
+  const displaySec = remaining % 60;
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-foreground text-background transition-colors duration-[2000ms] overflow-hidden">
@@ -49,7 +52,7 @@ function TimerParams() {
         }} />
       )}
       
-      {sessionStarted && <AmbientSound />}
+      {sessionStarted && <AmbientSound autoPlay />}
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
         <div className="w-64 h-64 rounded-full bg-background blur-3xl animate-breath"></div>
@@ -78,6 +81,16 @@ function TimerParams() {
             className="transition-all duration-1000 ease-linear opacity-30"
           />
         </svg>
+        
+        {/* Reverse Countdown Display */}
+        {sessionStarted && (
+          <div className="relative z-10 flex flex-col items-center">
+            <span className="text-5xl font-serif tabular-nums tracking-wider opacity-60">
+              {String(displayMin).padStart(2, '0')}:{String(displaySec).padStart(2, '0')}
+            </span>
+            <span className="text-xs tracking-widest uppercase opacity-20 mt-2">remaining</span>
+          </div>
+        )}
       </div>
 
       <button 

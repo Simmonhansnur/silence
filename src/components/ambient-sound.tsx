@@ -1,16 +1,20 @@
 "use client";
 
-import { useUserStatus } from "@/components/user-provider";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
-export function AmbientSound() {
-  const { isDeep, isLoading } = useUserStatus();
+interface AmbientSoundProps {
+  autoPlay?: boolean;
+}
+
+export function AmbientSound({ autoPlay = false }: AmbientSoundProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const hasInitRef = useRef(false);
 
-  const initAudio = () => {
-    if (audioCtxRef.current) return;
+  const initAudio = useCallback(() => {
+    if (hasInitRef.current) return;
+    hasInitRef.current = true;
     
     const ctx = new window.AudioContext();
     audioCtxRef.current = ctx;
@@ -25,7 +29,7 @@ export function AmbientSound() {
         const white = Math.random() * 2 - 1;
         output[i] = (lastOut + (0.02 * white)) / 1.02;
         lastOut = output[i];
-        output[i] *= 3.5; // Compensate for gain loss
+        output[i] *= 3.5;
     }
 
     const noiseSource = ctx.createBufferSource();
@@ -35,7 +39,7 @@ export function AmbientSound() {
     // Low-pass filter for the deep rumble effect
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 150; // Deep rumble
+    filter.frequency.value = 200;
     
     // Master gain for fade in/out
     const gainNode = ctx.createGain();
@@ -48,29 +52,44 @@ export function AmbientSound() {
     gainNode.connect(ctx.destination);
 
     noiseSource.start();
-  };
+
+    // Fade in
+    gainNode.gain.setTargetAtTime(0.15, ctx.currentTime, 2);
+    setIsPlaying(true);
+  }, []);
+
+  // Auto-play when component mounts if requested
+  useEffect(() => {
+    if (autoPlay) {
+      // Small delay to ensure we're in a user-gesture context
+      const timer = setTimeout(() => {
+        initAudio();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoPlay, initAudio]);
 
   const toggleSound = () => {
-    if (!audioCtxRef.current) {
-        initAudio();
+    if (!hasInitRef.current) {
+      initAudio();
+      return;
     }
     
-    const ctx = audioCtxRef.current!;
-    const gainNode = gainNodeRef.current!;
+    const ctx = audioCtxRef.current;
+    const gainNode = gainNodeRef.current;
+    if (!ctx || !gainNode) return;
 
     if (ctx.state === 'suspended') {
-        ctx.resume();
+      ctx.resume();
     }
 
     if (isPlaying) {
-      // Fade out
       gainNode.gain.setTargetAtTime(0, ctx.currentTime, 0.5);
+      setIsPlaying(false);
     } else {
-      // Fade in to gentle volume
-      gainNode.gain.setTargetAtTime(0.3, ctx.currentTime, 2);
+      gainNode.gain.setTargetAtTime(0.15, ctx.currentTime, 2);
+      setIsPlaying(true);
     }
-
-    setIsPlaying(!isPlaying);
   };
 
   useEffect(() => {
@@ -79,15 +98,13 @@ export function AmbientSound() {
     };
   }, []);
 
-  if (isLoading || !isDeep) return null;
-
   return (
     <button 
       onClick={toggleSound}
       className="absolute top-8 right-8 text-xs tracking-widest uppercase opacity-30 hover:opacity-100 transition-opacity flex items-center gap-2 z-50"
     >
-      <div className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-accent' : 'bg-secondary'}`} />
-      Brown Noise
+      <div className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-accent animate-pulse' : 'bg-secondary'}`} />
+      {isPlaying ? "Mute" : "Sound"}
     </button>
   );
 }
